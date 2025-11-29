@@ -12,10 +12,25 @@
   canvas {
     display: block;
   }
+  .instruction {
+    position: fixed;
+    left: 50%;
+    top: 20px;
+    transform: translateX(-50%);
+    color: rgba(255,255,255,0.9);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    font-size: 16px;
+    background: rgba(0,0,0,0.3);
+    padding: 10px 20px;
+    border-radius: 8px;
+    backdrop-filter: blur(4px);
+    text-align: center;
+  }
 </style>
 </head>
 <body>
 <canvas id="c"></canvas>
+<div class="instruction">Move your mouse or finger to control the hero</div>
 
 <script>
 const canvas = document.getElementById("c");
@@ -32,6 +47,8 @@ window.addEventListener("resize", resize);
 const hero = {
   x: canvas.width / 2,
   y: canvas.height / 2,
+  targetX: canvas.width / 2,
+  targetY: canvas.height / 2,
   t: 0
 };
 
@@ -100,10 +117,44 @@ function drawHero() {
   ctx.restore();
 }
 
+// ----- MOUSE/TOUCH TRACKING -----
+canvas.addEventListener("mousemove", (e) => {
+  const rect = canvas.getBoundingClientRect();
+  hero.targetX = e.clientX - rect.left;
+  hero.targetY = e.clientY - rect.top;
+});
+
+canvas.addEventListener("touchmove", (e) => {
+  e.preventDefault();
+  const rect = canvas.getBoundingClientRect();
+  const touch = e.touches[0];
+  hero.targetX = touch.clientX - rect.left;
+  hero.targetY = touch.clientY - rect.top;
+}, { passive: false });
+
+canvas.addEventListener("click", (e) => {
+  const rect = canvas.getBoundingClientRect();
+  hero.targetX = e.clientX - rect.left;
+  hero.targetY = e.clientY - rect.top;
+});
+
+canvas.addEventListener("touchstart", (e) => {
+  const rect = canvas.getBoundingClientRect();
+  const touch = e.touches[0];
+  hero.targetX = touch.clientX - rect.left;
+  hero.targetY = touch.clientY - rect.top;
+}, { passive: true });
+
 // ----- ANIMATION LOOP -----
 function animate() {
   ctx.clearRect(0,0,canvas.width,canvas.height);
   hero.t += 0.02;
+
+  // Smoothly move hero towards target
+  const dx = hero.targetX - hero.x;
+  const dy = hero.targetY - hero.y;
+  hero.x += dx * 0.1;
+  hero.y += dy * 0.1;
 
   drawHero();
   requestAnimationFrame(animate);
